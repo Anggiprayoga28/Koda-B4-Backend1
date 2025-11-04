@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,10 +24,22 @@ var products = []Product{
 func main() {
 	r := gin.Default()
 	r.GET("/products", getProducts)
+	r.GET("/products/:id", getProductByID)
 
 	r.Run(":8080")
 }
 
 func getProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": products})
+}
+
+func getProductByID(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	for _, p := range products {
+		if p.ID == id {
+			c.JSON(http.StatusOK, gin.H{"status": "success", "data": p})
+			return
+		}
+	}
+	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
 }
