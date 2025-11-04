@@ -3,100 +3,338 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Product struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	Stock       int     `json:"stock"`
+type User struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"full_name"`
 }
 
-var products = []Product{
-	{ID: 1, Name: "Laptop", Description: "Laptop gaming high-end", Price: 15000000, Stock: 10},
-	{ID: 2, Name: "Mouse", Description: "Mouse wireless", Price: 250000, Stock: 50},
-	{ID: 3, Name: "Keyboard", Description: "Mechanical keyboard", Price: 850000, Stock: 30},
+var users = []User{
+	// {ID: 1, Username: "admin", Email: "admin@gmail.com", Password: "admin123", FullName: "Administrator"},
+	// {ID: 2, Username: "anggi", Email: "anggi@gmail.com", Password: "anggi123", FullName: "Anggi"},
+	// {ID: 3, Username: "prayoga", Email: "prayoga@gmail.com", Password: "Prayoga123", FullName: "Prayoga"},
 }
+
+var nextID = 3
 
 func main() {
 	r := gin.Default()
-	r.GET("/products", getProducts)
-	r.GET("/products/:id", getProductByID)
-	r.POST("/products", createProduct)
-	r.PATCH("/products/:id", updateProduct)
-	r.DELETE("/products/:id", deleteProduct)
+
+	r.POST("/auth/register", register)
+	r.POST("/auth/login", login)
+
+	r.GET("/users", getUsers)
+	r.GET("/users/:id", getUserByID)
+	r.POST("/users", createUser)
+	r.PATCH("/users/:id", updateUser)
+	r.DELETE("/users/:id", deleteUser)
+
 	r.Run(":8080")
 }
 
-func getProducts(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": products})
+func isValidEmail(email string) bool {
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
-func getProductByID(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	for _, p := range products {
-		if p.ID == id {
-			c.JSON(http.StatusOK, gin.H{"status": "success", "data": p})
+func isValidUsername(username string) bool {
+	return len(username) >= 3 && len(username) <= 20
+}
+
+func isValidPassword(password string) bool {
+	return len(password) >= 6
+}
+
+func register(c *gin.Context) {
+	username := c.PostForm("username")
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	fullName := c.PostForm("full_name")
+
+	if username == "" || email == "" || password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Username, email, dan password wajib diisi",
+		})
+		return
+	}
+
+	if !isValidUsername(username) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Username harus 3-20 karakter",
+		})
+		return
+	}
+
+	if !isValidEmail(email) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Format email tidak valid",
+		})
+		return
+	}
+
+	if !isValidPassword(password) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Password minimal 6 karakter",
+		})
+		return
+	}
+
+	for _, u := range users {
+		if u.Username == username {
+			c.JSON(http.StatusConflict, gin.H{
+				"status":  "error",
+				"message": "Username sudah digunakan",
+			})
+			return
+		}
+		if u.Email == email {
+			c.JSON(http.StatusConflict, gin.H{
+				"status":  "error",
+				"message": "Email sudah terdaftar",
+			})
 			return
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
-}
 
-func createProduct(c *gin.Context) {
-	var p Product
-	if err := c.BindJSON(&p); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
-		return
+	newUser := User{
+		ID:       nextID,
+		Username: username,
+		Email:    email,
+		Password: password,
+		FullName: fullName,
 	}
-	p.ID = nextID
 	nextID++
-	products = append(products, p)
-	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": p})
+	users = append(users, newUser)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
+		"message": "Registrasi berhasil",
+		"data": gin.H{
+			"id":        newUser.ID,
+			"username":  newUser.Username,
+			"email":     newUser.Email,
+			"full_name": newUser.FullName,
+		},
+	})
 }
 
-var nextID = 4
+func login(c *gin.Context) {
+	username := c.PostForm("username")
+	password := c.PostForm("password")
 
-func updateProduct(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	var update Product
-	if err := c.BindJSON(&update); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+	if username == "" || password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Username dan password wajib diisi",
+		})
 		return
 	}
 
-	for i, p := range products {
-		if p.ID == id {
-			if update.Name != "" {
-				products[i].Name = update.Name
-			}
-			if update.Description != "" {
-				products[i].Description = update.Description
-			}
-			if update.Price > 0 {
-				products[i].Price = update.Price
-			}
-			if update.Stock >= 0 {
-				products[i].Stock = update.Stock
-			}
-			c.JSON(http.StatusOK, gin.H{"status": "success", "data": products[i]})
+	for _, u := range users {
+		if u.Username == username && u.Password == password {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "success",
+				"message": "Login berhasil",
+				"data": gin.H{
+					"id":        u.ID,
+					"username":  u.Username,
+					"email":     u.Email,
+					"full_name": u.FullName,
+				},
+			})
 			return
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
+
+	c.JSON(http.StatusUnauthorized, gin.H{
+		"status":  "error",
+		"message": "Username atau password salah",
+	})
 }
 
-func deleteProduct(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	for i, p := range products {
-		if p.ID == id {
-			products = append(products[:i], products[i+1:]...)
-			c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Product deleted"})
+func getUsers(c *gin.Context) {
+	var safeUsers []gin.H
+	for _, u := range users {
+		safeUsers = append(safeUsers, gin.H{
+			"id":        u.ID,
+			"username":  u.Username,
+			"email":     u.Email,
+			"full_name": u.FullName,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": safeUsers})
+}
+
+func getUserByID(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "ID tidak valid",
+		})
+		return
+	}
+
+	for _, u := range users {
+		if u.ID == id {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data": gin.H{
+					"id":        u.ID,
+					"username":  u.Username,
+					"email":     u.Email,
+					"full_name": u.FullName,
+				},
+			})
 			return
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
+	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "User tidak ditemukan"})
+}
+
+func createUser(c *gin.Context) {
+	username := c.PostForm("username")
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	fullName := c.PostForm("full_name")
+
+	if username == "" || email == "" || password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Username, email, dan password wajib diisi",
+		})
+		return
+	}
+
+	if !isValidUsername(username) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Username harus 3-20 karakter",
+		})
+		return
+	}
+
+	if !isValidEmail(email) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Format email tidak valid",
+		})
+		return
+	}
+
+	newUser := User{
+		ID:       nextID,
+		Username: username,
+		Email:    email,
+		Password: password,
+		FullName: fullName,
+	}
+	nextID++
+	users = append(users, newUser)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status": "success",
+		"data": gin.H{
+			"id":        newUser.ID,
+			"username":  newUser.Username,
+			"email":     newUser.Email,
+			"full_name": newUser.FullName,
+		},
+	})
+}
+
+func updateUser(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "ID tidak valid",
+		})
+		return
+	}
+
+	username := c.PostForm("username")
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	fullName := c.PostForm("full_name")
+
+	for i, u := range users {
+		if u.ID == id {
+			if username != "" {
+				if !isValidUsername(username) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"status":  "error",
+						"message": "Username harus 3-20 karakter",
+					})
+					return
+				}
+				users[i].Username = username
+			}
+			if email != "" {
+				if !isValidEmail(email) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"status":  "error",
+						"message": "Format email tidak valid",
+					})
+					return
+				}
+				users[i].Email = email
+			}
+			if password != "" {
+				if !isValidPassword(password) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"status":  "error",
+						"message": "Password minimal 6 karakter",
+					})
+					return
+				}
+				users[i].Password = password
+			}
+			if fullName != "" {
+				users[i].FullName = fullName
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data": gin.H{
+					"id":        users[i].ID,
+					"username":  users[i].Username,
+					"email":     users[i].Email,
+					"full_name": users[i].FullName,
+				},
+			})
+			return
+		}
+	}
+	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "User tidak ditemukan"})
+}
+
+func deleteUser(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "ID tidak valid",
+		})
+		return
+	}
+
+	for i, u := range users {
+		if u.ID == id {
+			users = append(users[:i], users[i+1:]...)
+			c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User berhasil dihapus"})
+			return
+		}
+	}
+	c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "User tidak ditemukan"})
 }
