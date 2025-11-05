@@ -1,0 +1,244 @@
+basePath: /
+definitions:
+  models.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: API Support
+  description: API sederhana untuk manajemen user dengan autentikasi
+  termsOfService: http://swagger.io/terms/
+  title: User Management API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Login menggunakan username dan password
+      parameters:
+      - description: Username
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login berhasil
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized - username atau password salah
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Login user
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Mendaftarkan user baru dengan username, email, password, dan full
+        name
+      parameters:
+      - description: Username (3-20 karakter)
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: Email address
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Password (minimal 6 karakter)
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Nama lengkap
+        in: formData
+        name: full_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registrasi berhasil
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Register user baru
+      tags:
+      - Authentication
+  /users:
+    get:
+      description: Mengambil daftar semua user yang terdaftar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar user berhasil diambil
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Mengambil semua user
+      tags:
+      - Users
+    post:
+      consumes:
+      - multipart/form-data
+      description: Membuat user baru dengan username, email, password, dan full name
+      parameters:
+      - description: Username (3-20 karakter)
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: Email address
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Password (minimal 6 karakter)
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Nama lengkap
+        in: formData
+        name: full_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User berhasil dibuat
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Membuat user baru
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      description: Menghapus user berdasarkan ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User berhasil dihapus
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: ID tidak valid
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User tidak ditemukan
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Hapus user
+      tags:
+      - Users
+    get:
+      description: Mengambil detail user berdasarkan ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User berhasil ditemukan
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: ID tidak valid
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User tidak ditemukan
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Mengambil user berdasarkan ID
+      tags:
+      - Users
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update data user berdasarkan ID (semua field opsional)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Username (3-20 karakter)
+        in: formData
+        name: username
+        type: string
+      - description: Email address
+        in: formData
+        name: email
+        type: string
+      - description: Password (minimal 6 karakter)
+        in: formData
+        name: password
+        type: string
+      - description: Nama lengkap
+        in: formData
+        name: full_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User berhasil diupdate
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User tidak ditemukan
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Update user
+      tags:
+      - Users
+schemes:
+- http
+swagger: "2.0"
