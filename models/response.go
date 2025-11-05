@@ -1,5 +1,7 @@
 package models
 
+import "backend1/config"
+
 type Response struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message,omitempty"`
@@ -7,13 +9,6 @@ type Response struct {
 }
 
 type UserResponse struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	FullName string `json:"full_name"`
-}
-
-type UserResponseWithHash struct {
 	ID           int    `json:"id"`
 	Username     string `json:"username"`
 	Email        string `json:"email"`
@@ -22,20 +17,35 @@ type UserResponseWithHash struct {
 }
 
 func ToUserResponse(user User) UserResponse {
-	return UserResponse{
+	response := UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 		FullName: user.FullName,
 	}
+
+	if config.AppConfig != nil && config.AppConfig.ShowPasswordHash {
+		response.PasswordHash = user.Password
+	}
+
+	return response
 }
 
-func ToUserResponseWithHash(user User, passwordHash string) UserResponseWithHash {
-	return UserResponseWithHash{
-		ID:           user.ID,
-		Username:     user.Username,
-		Email:        user.Email,
-		FullName:     user.FullName,
-		PasswordHash: passwordHash,
+func ToUserResponseWithHash(user User, passwordHash string) UserResponse {
+	response := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		FullName: user.FullName,
 	}
+
+	if config.AppConfig != nil && config.AppConfig.ShowPasswordHash {
+		if passwordHash != "" {
+			response.PasswordHash = passwordHash
+		} else {
+			response.PasswordHash = user.Password
+		}
+	}
+
+	return response
 }
