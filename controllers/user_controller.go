@@ -19,6 +19,8 @@ func NewUserController() *UserController {
 	}
 }
 
+// GetUsers godoc
+// @Router /users [get]
 func (ctrl *UserController) GetUsers(c *gin.Context) {
 	users := ctrl.userService.GetAllUsers()
 
@@ -33,6 +35,8 @@ func (ctrl *UserController) GetUsers(c *gin.Context) {
 	})
 }
 
+// GetUserByID godoc
+// @Router /users/{id} [get]
 func (ctrl *UserController) GetUserByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -58,6 +62,8 @@ func (ctrl *UserController) GetUserByID(c *gin.Context) {
 	})
 }
 
+// CreateUser godoc
+// @Router /users [post]
 func (ctrl *UserController) CreateUser(c *gin.Context) {
 	username := c.PostForm("username")
 	email := c.PostForm("email")
@@ -80,6 +86,8 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	})
 }
 
+// UpdateUser godoc
+// @Router /users/{id} [patch]
 func (ctrl *UserController) UpdateUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -123,6 +131,8 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 	}
 }
 
+// DeleteUser godoc
+// @Router /users/{id} [delete]
 func (ctrl *UserController) DeleteUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
