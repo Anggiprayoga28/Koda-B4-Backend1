@@ -4,12 +4,20 @@ import (
 	"backend1/models"
 	"errors"
 	"strings"
+
+	"github.com/matthewhartstonge/argon2"
 )
 
-type UserService struct{}
+type UserService struct {
+	argon2Config argon2.Config
+}
 
 func NewUserService() *UserService {
-	return &UserService{}
+	argon2Config := argon2.DefaultConfig()
+
+	return &UserService{
+		argon2Config: argon2Config,
+	}
 }
 
 func (s *UserService) IsValidEmail(email string) bool {
@@ -24,43 +32,60 @@ func (s *UserService) IsValidPassword(password string) bool {
 	return len(password) >= 6
 }
 
-func (s *UserService) Register(username, email, password, fullName string) (*models.User, error) {
+func (s *UserService) HashPassword(password string) (string, error) {
+	encoded, err := s.argon2Config.HashEncoded([]byte(password))
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), nil
+}
+
+func (s *UserService) VerifyPassword(hashedPassword, password string) (bool, error) {
+	return argon2.VerifyEncoded([]byte(password), []byte(hashedPassword))
+}
+
+func (s *UserService) Register(username, email, password, fullName string) (*models.User, string, error) {
 	if username == "" || email == "" || password == "" {
-		return nil, errors.New("username, email, dan password wajib diisi")
+		return nil, "", errors.New("username, email, dan password wajib diisi")
 	}
 
 	if !s.IsValidUsername(username) {
-		return nil, errors.New("username harus 3-20 karakter")
+		return nil, "", errors.New("username harus 3-20 karakter")
 	}
 
 	if !s.IsValidEmail(email) {
-		return nil, errors.New("format email tidak valid")
+		return nil, "", errors.New("format email tidak valid")
 	}
 
 	if !s.IsValidPassword(password) {
-		return nil, errors.New("password minimal 6 karakter")
+		return nil, "", errors.New("password minimal 6 karakter")
 	}
 
 	for _, u := range models.Users {
 		if u.Username == username {
-			return nil, errors.New("username sudah digunakan")
+			return nil, "", errors.New("username sudah digunakan")
 		}
 		if u.Email == email {
-			return nil, errors.New("email sudah terdaftar")
+			return nil, "", errors.New("email sudah terdaftar")
 		}
+	}
+
+	hashedPassword, err := s.HashPassword(password)
+	if err != nil {
+		return nil, "", errors.New("gagal meng-hash password")
 	}
 
 	newUser := models.User{
 		ID:       models.NextID,
 		Username: username,
 		Email:    email,
-		Password: password,
+		Password: hashedPassword,
 		FullName: fullName,
 	}
 	models.NextID++
 	models.Users = append(models.Users, newUser)
 
-	return &newUser, nil
+	return &newUser, hashedPassword, nil
 }
 
 func (s *UserService) Login(username, password string) (*models.User, error) {
@@ -69,8 +94,14 @@ func (s *UserService) Login(username, password string) (*models.User, error) {
 	}
 
 	for _, u := range models.Users {
-		if u.Username == username && u.Password == password {
-			return &u, nil
+		if u.Username == username {
+			valid, err := s.VerifyPassword(u.Password, password)
+			if err != nil {
+				return nil, errors.New("error verifikasi password")
+			}
+			if valid {
+				return &u, nil
+			}
 		}
 	}
 
@@ -90,64 +121,76 @@ func (s *UserService) GetUserByID(id int) (*models.User, error) {
 	return nil, errors.New("user tidak ditemukan")
 }
 
-func (s *UserService) CreateUser(username, email, password, fullName string) (*models.User, error) {
+func (s *UserService) CreateUser(username, email, password, fullName string) (*models.User, string, error) {
 	if username == "" || email == "" || password == "" {
-		return nil, errors.New("username, email, dan password wajib diisi")
+		return nil, "", errors.New("username, email, dan password wajib diisi")
 	}
 
 	if !s.IsValidUsername(username) {
-		return nil, errors.New("username harus 3-20 karakter")
+		return nil, "", errors.New("username harus 3-20 karakter")
 	}
 
 	if !s.IsValidEmail(email) {
-		return nil, errors.New("format email tidak valid")
+		return nil, "", errors.New("format email tidak valid")
 	}
 
 	if !s.IsValidPassword(password) {
-		return nil, errors.New("password minimal 6 karakter")
+		return nil, "", errors.New("password minimal 6 karakter")
+	}
+
+	hashedPassword, err := s.HashPassword(password)
+	if err != nil {
+		return nil, "", errors.New("gagal meng-hash password")
 	}
 
 	newUser := models.User{
 		ID:       models.NextID,
 		Username: username,
 		Email:    email,
-		Password: password,
+		Password: hashedPassword,
 		FullName: fullName,
 	}
 	models.NextID++
 	models.Users = append(models.Users, newUser)
 
-	return &newUser, nil
+	return &newUser, hashedPassword, nil
 }
 
-func (s *UserService) UpdateUser(id int, username, email, password, fullName string) (*models.User, error) {
+func (s *UserService) UpdateUser(id int, username, email, password, fullName string) (*models.User, string, error) {
+	var newHashedPassword string
+
 	for i, u := range models.Users {
 		if u.ID == id {
 			if username != "" {
 				if !s.IsValidUsername(username) {
-					return nil, errors.New("username harus 3-20 karakter")
+					return nil, "", errors.New("username harus 3-20 karakter")
 				}
 				models.Users[i].Username = username
 			}
 			if email != "" {
 				if !s.IsValidEmail(email) {
-					return nil, errors.New("format email tidak valid")
+					return nil, "", errors.New("format email tidak valid")
 				}
 				models.Users[i].Email = email
 			}
 			if password != "" {
 				if !s.IsValidPassword(password) {
-					return nil, errors.New("password minimal 6 karakter")
+					return nil, "", errors.New("password minimal 6 karakter")
 				}
-				models.Users[i].Password = password
+				hashedPassword, err := s.HashPassword(password)
+				if err != nil {
+					return nil, "", errors.New("gagal meng-hash password")
+				}
+				models.Users[i].Password = hashedPassword
+				newHashedPassword = hashedPassword
 			}
 			if fullName != "" {
 				models.Users[i].FullName = fullName
 			}
-			return &models.Users[i], nil
+			return &models.Users[i], newHashedPassword, nil
 		}
 	}
-	return nil, errors.New("user tidak ditemukan")
+	return nil, "", errors.New("user tidak ditemukan")
 }
 
 func (s *UserService) DeleteUser(id int) error {
