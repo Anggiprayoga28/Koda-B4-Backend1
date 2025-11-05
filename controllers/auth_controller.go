@@ -24,7 +24,7 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	password := c.PostForm("password")
 	fullName := c.PostForm("full_name")
 
-	user, err := ctrl.userService.Register(username, email, password, fullName)
+	user, passwordHash, err := ctrl.userService.Register(username, email, password, fullName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Status:  "error",
@@ -36,7 +36,7 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, models.Response{
 		Status:  "success",
 		Message: "Registrasi berhasil",
-		Data:    models.ToUserResponse(*user),
+		Data:    models.ToUserResponseWithHash(*user, passwordHash),
 	})
 }
 
