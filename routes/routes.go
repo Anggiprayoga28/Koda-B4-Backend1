@@ -2,11 +2,14 @@ package routes
 
 import (
 	"backend1/controllers"
+	"backend1/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(r *gin.Engine) {
+	r.Use(middleware.CORS())
+
 	authController := controllers.NewAuthController()
 	userController := controllers.NewUserController()
 
