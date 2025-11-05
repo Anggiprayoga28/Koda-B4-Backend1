@@ -64,7 +64,7 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	password := c.PostForm("password")
 	fullName := c.PostForm("full_name")
 
-	user, err := ctrl.userService.CreateUser(username, email, password, fullName)
+	user, passwordHash, err := ctrl.userService.CreateUser(username, email, password, fullName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Status:  "error",
@@ -74,8 +74,9 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, models.Response{
-		Status: "success",
-		Data:   models.ToUserResponse(*user),
+		Status:  "success",
+		Message: "User berhasil dibuat",
+		Data:    models.ToUserResponseWithHash(*user, passwordHash),
 	})
 }
 
@@ -94,7 +95,7 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 	password := c.PostForm("password")
 	fullName := c.PostForm("full_name")
 
-	user, err := ctrl.userService.UpdateUser(id, username, email, password, fullName)
+	user, passwordHash, err := ctrl.userService.UpdateUser(id, username, email, password, fullName)
 	if err != nil {
 		statusCode := http.StatusBadRequest
 		if err.Error() == "user tidak ditemukan" {
@@ -107,10 +108,19 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Response{
-		Status: "success",
-		Data:   models.ToUserResponse(*user),
-	})
+	if passwordHash != "" {
+		c.JSON(http.StatusOK, models.Response{
+			Status:  "success",
+			Message: "User berhasil diupdate",
+			Data:    models.ToUserResponseWithHash(*user, passwordHash),
+		})
+	} else {
+		c.JSON(http.StatusOK, models.Response{
+			Status:  "success",
+			Message: "User berhasil diupdate",
+			Data:    models.ToUserResponse(*user),
+		})
+	}
 }
 
 func (ctrl *UserController) DeleteUser(c *gin.Context) {
