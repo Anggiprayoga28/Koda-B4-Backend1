@@ -13,11 +13,29 @@ type UserResponse struct {
 	FullName string `json:"full_name"`
 }
 
+type UserResponseWithHash struct {
+	ID           int    `json:"id"`
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	FullName     string `json:"full_name"`
+	PasswordHash string `json:"password_hash,omitempty"`
+}
+
 func ToUserResponse(user User) UserResponse {
 	return UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 		FullName: user.FullName,
+	}
+}
+
+func ToUserResponseWithHash(user User, passwordHash string) UserResponseWithHash {
+	return UserResponseWithHash{
+		ID:           user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
+		FullName:     user.FullName,
+		PasswordHash: passwordHash,
 	}
 }
