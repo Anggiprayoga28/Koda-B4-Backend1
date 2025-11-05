@@ -18,6 +18,18 @@ func NewAuthController() *AuthController {
 	}
 }
 
+// @Summary Register user baru
+// @Description Mendaftarkan user baru dengan username, email, password, dan full name
+// @Tags Authentication
+// @Accept multipart/form-data
+// @Produce json
+// @Param username formData string true "Username (3-20 karakter)"
+// @Param email formData string true "Email address"
+// @Param password formData string true "Password (minimal 6 karakter)"
+// @Param full_name formData string false "Nama lengkap"
+// @Success 201 {object} models.Response "Registrasi berhasil"
+// @Failure 400 {object} models.Response "Bad request"
+// @Router /auth/register [post]
 func (ctrl *AuthController) Register(c *gin.Context) {
 	username := c.PostForm("username")
 	email := c.PostForm("email")
@@ -40,6 +52,17 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	})
 }
 
+// @Summary Login user
+// @Description Login menggunakan username dan password
+// @Tags Authentication
+// @Accept multipart/form-data
+// @Produce json
+// @Param username formData string true "Username"
+// @Param password formData string true "Password"
+// @Success 200 {object} models.Response "Login berhasil"
+// @Failure 400 {object} models.Response "Bad request"
+// @Failure 401 {object} models.Response "Unauthorized - username atau password salah"
+// @Router /auth/login [post]
 func (ctrl *AuthController) Login(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
