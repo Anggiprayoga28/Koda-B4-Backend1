@@ -21,7 +21,7 @@ func LoadConfig() *Config {
 	}
 
 	config := &Config{
-		Port:             getEnv("APP_PORT", "8080"),
+		Port:             getEnv("APP_PORT", "8081"),
 		ShowPasswordHash: getEnv("SHOW_PASSWORD_HASH", "true") == "true",
 	}
 
