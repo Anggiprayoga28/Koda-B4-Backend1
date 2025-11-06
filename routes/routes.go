@@ -21,6 +21,7 @@ func SetupRoutes(r *gin.Engine) {
 	}
 
 	users := r.Group("/users")
+	users.Use(middleware.JWTAuth())
 	{
 		users.GET("", userController.GetUsers)
 		users.GET("/:id", userController.GetUserByID)
@@ -30,6 +31,7 @@ func SetupRoutes(r *gin.Engine) {
 	}
 
 	upload := r.Group("/upload")
+	upload.Use(middleware.JWTAuth())
 	{
 		upload.POST("/:user_id", profileController.UploadPicture)
 		upload.GET("/:user_id", profileController.GetPicture)
