@@ -105,10 +105,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
       summary: Lihat gambar profile
       tags:
       - Profile
@@ -137,21 +143,179 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
       summary: Upload gambar profile
       tags:
       - Profile
   /users:
     get:
-      responses: {}
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      tags:
+      - Users
     post:
-      responses: {}
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Username
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Full Name
+        in: formData
+        name: full_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      tags:
+      - Users
   /users/{id}:
     delete:
-      responses: {}
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      tags:
+      - Users
     get:
-      responses: {}
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      tags:
+      - Users
     patch:
-      responses: {}
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Username
+        in: formData
+        name: username
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        type: string
+      - description: Full Name
+        in: formData
+        name: full_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      tags:
+      - Users
 schemes:
 - http
 swagger: "2.0"
