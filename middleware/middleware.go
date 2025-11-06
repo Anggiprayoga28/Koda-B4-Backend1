@@ -1,6 +1,10 @@
 package middleware
 
 import (
+	"backend1/services"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +20,37 @@ func CORS() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func JWTAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": "Token tidak ditemukan",
+			})
+			c.Abort()
+			return
+		}
+
+		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+
+		jwtService := services.NewJWTService()
+		claims, err := jwtService.ValidateToken(tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": "Token tidak valid",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.Username)
 		c.Next()
 	}
 }
