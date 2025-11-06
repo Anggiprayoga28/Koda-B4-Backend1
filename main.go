@@ -16,7 +16,7 @@ import (
 // @version         1.0
 // @description     API sederhana untuk manajemen user dengan autentikasi menggunakan Argon2
 // @termsOfService  http://swagger.io/terms/
-// @host      localhost:8080
+// @host      localhost:8081
 // @BasePath  /
 // @schemes   http
 
