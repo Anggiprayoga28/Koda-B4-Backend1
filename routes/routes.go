@@ -12,6 +12,7 @@ func SetupRoutes(r *gin.Engine) {
 
 	authController := controllers.NewAuthController()
 	userController := controllers.NewUserController()
+	profileController := controllers.NewProfileController()
 
 	auth := r.Group("/auth")
 	{
@@ -27,4 +28,12 @@ func SetupRoutes(r *gin.Engine) {
 		users.PATCH("/:id", userController.UpdateUser)
 		users.DELETE("/:id", userController.DeleteUser)
 	}
+
+	upload := r.Group("/upload")
+	{
+		upload.POST("/:user_id", profileController.UploadPicture)
+		upload.GET("/:user_id", profileController.GetPicture)
+	}
+
+	r.Static("/uploads", "./uploads")
 }
