@@ -10,11 +10,13 @@ import (
 
 type AuthController struct {
 	userService *services.UserService
+	jwtService  *services.JWTService
 }
 
 func NewAuthController() *AuthController {
 	return &AuthController{
 		userService: services.NewUserService(),
+		jwtService:  services.NewJWTService(),
 	}
 }
 
@@ -45,10 +47,15 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 		return
 	}
 
+	token, _ := ctrl.jwtService.GenerateToken(user.ID, user.Username)
+
 	c.JSON(http.StatusCreated, models.Response{
 		Status:  "success",
 		Message: "Registrasi berhasil",
-		Data:    models.ToUserResponseWithHash(*user, passwordHash),
+		Data: gin.H{
+			"user":  models.ToUserResponseWithHash(*user, passwordHash),
+			"token": token,
+		},
 	})
 }
 
@@ -80,9 +87,14 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 		return
 	}
 
+	token, _ := ctrl.jwtService.GenerateToken(user.ID, user.Username)
+
 	c.JSON(http.StatusOK, models.Response{
 		Status:  "success",
 		Message: "Login berhasil",
-		Data:    models.ToUserResponse(*user),
+		Data: gin.H{
+			"user":  models.ToUserResponse(*user),
+			"token": token,
+		},
 	})
 }
