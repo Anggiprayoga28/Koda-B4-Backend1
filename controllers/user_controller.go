@@ -20,8 +20,16 @@ func NewUserController() *UserController {
 }
 
 // GetUsers godoc
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} models.Response
+// @Failure 401 {object} models.Response
 // @Router /users [get]
 func (ctrl *UserController) GetUsers(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	username, _ := c.Get("username")
+
 	users := ctrl.userService.GetAllUsers()
 
 	var userResponses []models.UserResponse
@@ -31,13 +39,29 @@ func (ctrl *UserController) GetUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Response{
 		Status: "success",
-		Data:   userResponses,
+		Data: gin.H{
+			"authorized_user": gin.H{
+				"user_id":  userID,
+				"username": username,
+			},
+			"users": userResponses,
+		},
 	})
 }
 
 // GetUserByID godoc
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.Response
+// @Failure 401 {object} models.Response
+// @Failure 404 {object} models.Response
 // @Router /users/{id} [get]
 func (ctrl *UserController) GetUserByID(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	username, _ := c.Get("username")
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
@@ -58,19 +82,39 @@ func (ctrl *UserController) GetUserByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Response{
 		Status: "success",
-		Data:   models.ToUserResponse(*user),
+		Data: gin.H{
+			"authorized_user": gin.H{
+				"user_id":  userID,
+				"username": username,
+			},
+			"user": models.ToUserResponse(*user),
+		},
 	})
 }
 
 // CreateUser godoc
+// @Tags Users
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param username formData string true "Username"
+// @Param email formData string true "Email"
+// @Param password formData string true "Password"
+// @Param full_name formData string false "Full Name"
+// @Success 201 {object} models.Response
+// @Failure 400 {object} models.Response
+// @Failure 401 {object} models.Response
 // @Router /users [post]
 func (ctrl *UserController) CreateUser(c *gin.Context) {
-	username := c.PostForm("username")
+	userID, _ := c.Get("user_id")
+	username, _ := c.Get("username")
+
+	usernameForm := c.PostForm("username")
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 	fullName := c.PostForm("full_name")
 
-	user, passwordHash, err := ctrl.userService.CreateUser(username, email, password, fullName)
+	user, passwordHash, err := ctrl.userService.CreateUser(usernameForm, email, password, fullName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Status:  "error",
@@ -82,13 +126,35 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, models.Response{
 		Status:  "success",
 		Message: "User berhasil dibuat",
-		Data:    models.ToUserResponseWithHash(*user, passwordHash),
+		Data: gin.H{
+			"created_by": gin.H{
+				"user_id":  userID,
+				"username": username,
+			},
+			"user": models.ToUserResponseWithHash(*user, passwordHash),
+		},
 	})
 }
 
 // UpdateUser godoc
+// @Tags Users
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "User ID"
+// @Param username formData string false "Username"
+// @Param email formData string false "Email"
+// @Param password formData string false "Password"
+// @Param full_name formData string false "Full Name"
+// @Success 200 {object} models.Response
+// @Failure 400 {object} models.Response
+// @Failure 401 {object} models.Response
+// @Failure 404 {object} models.Response
 // @Router /users/{id} [patch]
 func (ctrl *UserController) UpdateUser(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	usernameToken, _ := c.Get("username")
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
@@ -116,24 +182,40 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	if passwordHash != "" {
-		c.JSON(http.StatusOK, models.Response{
-			Status:  "success",
-			Message: "User berhasil diupdate",
-			Data:    models.ToUserResponseWithHash(*user, passwordHash),
-		})
-	} else {
-		c.JSON(http.StatusOK, models.Response{
-			Status:  "success",
-			Message: "User berhasil diupdate",
-			Data:    models.ToUserResponse(*user),
-		})
+	responseData := gin.H{
+		"updated_by": gin.H{
+			"user_id":  userID,
+			"username": usernameToken,
+		},
 	}
+
+	if passwordHash != "" {
+		responseData["user"] = models.ToUserResponseWithHash(*user, passwordHash)
+	} else {
+		responseData["user"] = models.ToUserResponse(*user)
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Status:  "success",
+		Message: "User berhasil diupdate",
+		Data:    responseData,
+	})
 }
 
 // DeleteUser godoc
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.Response
+// @Failure 400 {object} models.Response
+// @Failure 401 {object} models.Response
+// @Failure 404 {object} models.Response
 // @Router /users/{id} [delete]
 func (ctrl *UserController) DeleteUser(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	username, _ := c.Get("username")
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
@@ -155,5 +237,12 @@ func (ctrl *UserController) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Status:  "success",
 		Message: "User berhasil dihapus",
+		Data: gin.H{
+			"deleted_by": gin.H{
+				"user_id":  userID,
+				"username": username,
+			},
+			"deleted_user_id": id,
+		},
 	})
 }
