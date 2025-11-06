@@ -8,11 +8,10 @@ definitions:
       status:
         type: string
     type: object
-host: localhost:8080
+host: localhost:8081
 info:
-  contact:
-    name: API Support
-  description: API sederhana untuk manajemen user dengan autentikasi
+  contact: {}
+  description: API sederhana untuk manajemen user dengan autentikasi menggunakan Argon2
   termsOfService: http://swagger.io/terms/
   title: User Management API
   version: "1.0"
@@ -91,154 +90,68 @@ paths:
       summary: Register user baru
       tags:
       - Authentication
-  /users:
+  /upload/{user_id}:
     get:
-      description: Mengambil daftar semua user yang terdaftar
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Daftar user berhasil diambil
+          description: OK
           schema:
             $ref: '#/definitions/models.Response'
-      summary: Mengambil semua user
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Lihat gambar profile
       tags:
-      - Users
+      - Profile
     post:
       consumes:
       - multipart/form-data
-      description: Membuat user baru dengan username, email, password, dan full name
       parameters:
-      - description: Username (3-20 karakter)
-        in: formData
-        name: username
+      - description: User ID
+        in: path
+        name: user_id
         required: true
-        type: string
-      - description: Email address
+        type: integer
+      - description: Gambar
         in: formData
-        name: email
+        name: profile_pic
         required: true
-        type: string
-      - description: Password (minimal 6 karakter)
-        in: formData
-        name: password
-        required: true
-        type: string
-      - description: Nama lengkap
-        in: formData
-        name: full_name
-        type: string
+        type: file
       produces:
       - application/json
       responses:
-        "201":
-          description: User berhasil dibuat
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/models.Response'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
             $ref: '#/definitions/models.Response'
-      summary: Membuat user baru
+      summary: Upload gambar profile
       tags:
-      - Users
+      - Profile
+  /users:
+    get:
+      responses: {}
+    post:
+      responses: {}
   /users/{id}:
     delete:
-      description: Menghapus user berdasarkan ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User berhasil dihapus
-          schema:
-            $ref: '#/definitions/models.Response'
-        "400":
-          description: ID tidak valid
-          schema:
-            $ref: '#/definitions/models.Response'
-        "404":
-          description: User tidak ditemukan
-          schema:
-            $ref: '#/definitions/models.Response'
-      summary: Hapus user
-      tags:
-      - Users
+      responses: {}
     get:
-      description: Mengambil detail user berdasarkan ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User berhasil ditemukan
-          schema:
-            $ref: '#/definitions/models.Response'
-        "400":
-          description: ID tidak valid
-          schema:
-            $ref: '#/definitions/models.Response'
-        "404":
-          description: User tidak ditemukan
-          schema:
-            $ref: '#/definitions/models.Response'
-      summary: Mengambil user berdasarkan ID
-      tags:
-      - Users
+      responses: {}
     patch:
-      consumes:
-      - multipart/form-data
-      description: Update data user berdasarkan ID (semua field opsional)
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Username (3-20 karakter)
-        in: formData
-        name: username
-        type: string
-      - description: Email address
-        in: formData
-        name: email
-        type: string
-      - description: Password (minimal 6 karakter)
-        in: formData
-        name: password
-        type: string
-      - description: Nama lengkap
-        in: formData
-        name: full_name
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User berhasil diupdate
-          schema:
-            $ref: '#/definitions/models.Response'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/models.Response'
-        "404":
-          description: User tidak ditemukan
-          schema:
-            $ref: '#/definitions/models.Response'
-      summary: Update user
-      tags:
-      - Users
+      responses: {}
 schemes:
 - http
 swagger: "2.0"
