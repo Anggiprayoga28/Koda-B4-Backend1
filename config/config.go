@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Port             string
 	ShowPasswordHash bool
+	JWTSecret        string
 }
 
 var AppConfig *Config
@@ -23,6 +24,7 @@ func LoadConfig() *Config {
 	config := &Config{
 		Port:             getEnv("APP_PORT", "8081"),
 		ShowPasswordHash: getEnv("SHOW_PASSWORD_HASH", "true") == "true",
+		JWTSecret:        getEnv("JWT_SECRET", "i0WnIgAh9v38Q2Zk5PL6aiA7YUAf5toouMq/GIQ1d4g="),
 	}
 
 	AppConfig = config
