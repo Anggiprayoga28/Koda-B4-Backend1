@@ -16,6 +16,13 @@ type UserResponse struct {
 	PasswordHash string `json:"password_hash,omitempty"`
 }
 
+type ProfileResponse struct {
+	ID         int    `json:"id"`
+	UserID     int    `json:"user_id"`
+	ProfilePic string `json:"profile_pic"`
+	URL        string `json:"url,omitempty"`
+}
+
 func ToUserResponse(user User) UserResponse {
 	response := UserResponse{
 		ID:       user.ID,
@@ -45,6 +52,20 @@ func ToUserResponseWithHash(user User, passwordHash string) UserResponse {
 		} else {
 			response.PasswordHash = user.Password
 		}
+	}
+
+	return response
+}
+
+func ToProfileResponse(profile Profile) ProfileResponse {
+	response := ProfileResponse{
+		ID:         profile.ID,
+		UserID:     profile.UserID,
+		ProfilePic: profile.ProfilePic,
+	}
+
+	if profile.ProfilePic != "" {
+		response.URL = "http://localhost:8081/" + profile.ProfilePic
 	}
 
 	return response
